@@ -11,17 +11,27 @@ import { Sparkles, Info } from 'lucide-react';
 function App() {
   const [result, setResult] = useState<BondResponse | null>(null);
   const [loading, setLoading] = useState(false);
+  const [loadingMessage, setLoadingMessage] = useState('Running Bisection Analysis...');
   const [error, setError] = useState<string | null>(null);
 
   const handleCalculate = async (data: BondRequest) => {
+    let timeoutId: ReturnType<typeof setTimeout>;
     try {
       setLoading(true);
       setError(null);
+      setLoadingMessage('Running Bisection Analysis...');
+
+      // If the request takes longer than 4 seconds, the Render server is likely spinning up
+      timeoutId = setTimeout(() => {
+        setLoadingMessage('Waking up server (might take ~40-50 secs)...');
+      }, 4000);
+
       const response = await calculateBond(data);
       setResult(response);
     } catch {
-      setError('Connection failed. Please ensure the backend server is running on port 3000.');
+      setError('Connection failed. The server might be waking up, please try again in 30 seconds.');
     } finally {
+      clearTimeout(timeoutId!);
       setLoading(false);
     }
   };
@@ -88,7 +98,7 @@ function App() {
                   className="h-full min-h-[400px] flex flex-col items-center justify-center space-y-4"
                 >
                   <div className="w-12 h-12 border-4 border-blue-500/20 border-t-blue-500 rounded-full animate-spin" />
-                  <p className="text-blue-400 font-medium animate-pulse">Running Bisection Analysis...</p>
+                  <p className="text-blue-400 font-medium animate-pulse">{loadingMessage}</p>
                 </motion.div>
               ) : !result ? (
                 <motion.div
